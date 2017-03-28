@@ -1,0 +1,129 @@
+String[] splitparameter= parameter.split(";");
+				
+		String cifID = conf.getParameterValue(splitparameter[0]);
+		String accountNum = conf.getParameterValue(splitparameter[1]);	
+		String searchkey = conf.getParameterValue(splitparameter[2]);		
+		String filepath = conf.getParameterValue(splitparameter[3]);///Ex: C:\\Project Files\\PA01\\Requests\\CardService01.txt
+		//request file path
+		
+		String url = conf.getParameterValue(splitparameter[4]); ///Ex: http://ztplexbus.aib.pri:20430/plserver
+		//API path-	//Xpath of searchkey in response
+		String xPath = conf.getParameterValue(splitparameter[5]);//Ex: /Response//Fields/Field[@name='CARD_OCCURENCES']/Value/text()		
+	
+		
+		mgr.deb("xpath passed" + xPath);
+		//String xpath =	"/Response//Fields/Field[@name='"+attname+"']/Value/text()";
+		mgr.deb("CIFID before validation" + cifID);
+		mgr.deb("AccountNum before validation" + accountNum);
+		try
+		{
+			
+				//Read File
+				BufferedReader reader = new BufferedReader(new FileReader (filepath));
+				String lineSeparator = System.getProperty("line.separator");
+				String line = null;
+				StringBuilder stringBuilder = new StringBuilder(); 		       
+				while((line = reader.readLine()) != null)
+				{
+					stringBuilder.append(line);
+					stringBuilder.append(lineSeparator);
+				}
+				String strRequest = stringBuilder.toString();
+				mgr.deb(strRequest.toString());
+				String newcontent = strRequest.replace("CIFID", cifID);
+				mgr.deb("After CIF ID is replaced" +newcontent);
+				String newaccountNum = accountNum.substring(8);	
+				String newfileContents = newcontent.replace("ACNO", newaccountNum);
+				//File Read
+				URL obj = new URL(url);
+				HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+				//Connection is established	
+				//Get Document which has the account number
+				
+				con.setRequestMethod("POST");
+	
+				// Send post request
+				con.setDoOutput(true);
+				con.setRequestProperty("Content-Type", "application/xml");
+				DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+				wr.writeBytes(newcontent);
+				wr.flush();
+				wr.close();
+				int responseCode = con.getResponseCode();
+																
+				BufferedReader in = new BufferedReader(
+				new InputStreamReader(con.getInputStream()));
+				String inputLine;
+				StringBuffer response = new StringBuffer();													
+				while ((inputLine = in.readLine()) != null) {
+					response.append(inputLine);
+				}
+				
+				in.close();
+				String res = response.toString().replace(" encoding=\"UTF-8\"", "");                                 
+				mgr.deb("After retreiving the response \n"+ res );
+				DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+				DocumentBuilder builder = factory.newDocumentBuilder();         
+				org.w3c.dom.Document document = builder.parse(new InputSource(new StringReader(res)));
+				//Document is received     
+
+				//Get Value by name													
+				XPathFactory xpathFactory = XPathFactory.newInstance();
+				XPath xpath = xpathFactory.newXPath();
+				String retValue = null;
+				try 
+				{
+					
+					//XPathExpression expr = xpath.compile(elementXpath);
+						XPathExpression expr = xpath.compile(xPath);
+						
+						retValue = (String) expr.evaluate(document, XPathConstants.STRING);
+						
+						mgr.deb("Retrieved value"  +retValue);
+						
+						//String key = "Y";
+						
+						if(retValue.contains(searchkey))
+						{
+			
+							//mgr.deb("at line no 3019");
+							mgr.deb("Message is found in Response");
+			
+							log.stepActual = "Success" ;
+							log.stepResult = "Passed";
+							browser.strErrorInfo = "";            
+							log.logExecutionResults("WebServiceReqResp", "To validate Response","Message is found in Response","Passed", searchkey,10,"","WebServiceReqResp" );
+							return 0;
+							//conf.addRuntimeData(strOutputVariable, CIF);
+						}
+			
+						else
+						{
+							mgr.deb("Message is not found in Response");
+							log.stepActual = "UnSuccessful" ;
+							log.stepResult = "Failed";
+							browser.strErrorInfo = "";            
+							log.logExecutionResults("WebServiceReqResp", "To validate Response","Message is not found in Response","Failed", "No",10,"","WebServiceReqResp" );
+							return 1;                                                                         
+						}				
+				
+				}
+				catch (XPathExpressionException e) {
+					e.printStackTrace();
+				}  
+		}
+		catch (IOException | ParserConfigurationException | SAXException e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+		}
+
+			
+		catch (Exception e){
+			if(!browser.isAllowedException(e))
+				mgr.logException(e);
+			return 1;
+		}							
+		
+		return 0;
+		
+	}

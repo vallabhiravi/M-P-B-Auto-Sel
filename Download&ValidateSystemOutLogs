@@ -1,0 +1,182 @@
+
+/***************************************************************************************************************************************************
+Function Name: 'readAndValidateInReverseOrder'
+Description: //To read and validate from the error log file in reverse order
+//Using Stack concept to read and validate in the Log file.
+Parameters: Filepath;>0d7cd169-e1c2-463d-af82-56de87b4e543<;Invalid JWT
+Screen name: NA
+Object Name: NA
+Return Value: Returns 0 or 1    
+**************************************************************************************************************************************************/
+   
+   public  int readAndValidateInReverseOrder(String parameter) {
+   //public static int readAndValidateInReverseOrder(String path,String ErrorLogRef,String ErrorLogMsg) throws IOException {   
+    String[] splitparameter= parameter.split(";");
+    String Filepath = conf.getParameterValue(splitparameter[0]);
+    String sErrorLogRef = conf.getParameterValue(splitparameter[1]);  
+    String sErrorLogMsg = conf.getParameterValue(splitparameter[2]);  
+    //String Filepath = path;
+    BufferedReader br = null;
+    //String sErrorLogRef=ErrorLogRef;
+    //String sErrorLogMsg=ErrorLogMsg;
+    //Buffer reader object to read file and store in stack(Last in First out)
+    try {
+        br = new BufferedReader(new FileReader(Filepath));
+        Stack<String> lines = new Stack<String>();
+        String line = br.readLine();
+        while(line != null) {
+            lines.push(line);
+            line = br.readLine();
+        }
+        String FromLast="";
+        System.out.println("Initial Log size:" + lines.size());
+        System.out.println("Error log reference:" + sErrorLogRef);
+        System.out.println("Error log Message:" + sErrorLogMsg);
+        
+        boolean ErrorLogCode=false;
+        while(!lines.empty()) {
+          FromLast=FromLast + lines.pop();
+          
+          //String FromLast=lines.pop();                 
+           ErrorLogCode=FromLast.contains(sErrorLogRef);
+           //System.out.println("Initial Log size:" + lines.size());
+             if(ErrorLogCode) {
+                                             
+                        //Code to search in the lines above reference message from bottom                                               
+                        int newSizenum=lines.size()-5000;
+                        Collection<String> newSubset=lines.subList(newSizenum,lines.size());
+                        //System.out.println("New subset values:" +  newSubset.size()); 
+                        mgr.deb("New subset values in the log file:" +  newSubset.size());
+                        boolean SubSetFlag=false;
+                        for (String ListItem:newSubset) {
+                              SubSetFlag=ListItem.contains(sErrorLogMsg);
+                               //System.out.println("For each item: " + ListItem);
+                              if(SubSetFlag) {
+                                   //System.out.println("Subset have the Error log code: " + ErrorLogCode);
+                                   //System.out.println("Subset have the Error log code message: " + sErrorLogMsg);  
+                                   mgr.deb("Subset have the Error log code message: " + sErrorLogMsg);
+                                   browser.strErrorInfo = "Succesfully found a error message:[" + sErrorLogMsg +"] in contents of the log file in the runtimelog saved in path : " + sErrorLogMsg;
+                                   return 1;                                
+                              }                                  
+                         }
+                        //lines.size();
+                        //New code to search in the accumulated list from bottom      
+                        boolean ErrorLogAccTextFlag=FromLast.contains(sErrorLogMsg);
+                         //System.out.println("Initial Log size:" + lines.size());
+                         if(SubSetFlag==false) {
+                                /*System.out.println("Subset have the Error log code: " + SubSetFlag);
+                                System.out.println("Failed to find the Subset with the Error log code message: " + sErrorLogMsg);  */
+                                mgr.deb("Failed to find the overall  text above reference text with error message: " + sErrorLogMsg);
+                                     log.stepActual = "Unable to find the Logfile with the Error log code message: " + sErrorLogMsg;
+                                       log.stepResult = "Passed";
+                                       browser.strErrorInfo = "";       
+                                       log.logExecutionResults("VERIFYLOGCONTENT", "Validate Logfile with the Error log code message","To find the Logfile with the Error log code message","Passed", "Unable to find the Logfile with the Error log code message: " + sErrorLogMsg,10,"","VERIFYLOGCONTENT" );        
+                                    // return 0;   
+                         }
+                         if (ErrorLogAccTextFlag) { 
+                         System.out.println("Accumulated text contains error message: " + sErrorLogMsg);
+                        mgr.deb("Accumulated text contains error message: " + sErrorLogMsg);
+                                browser.strErrorInfo = "Succesfully found a message:[" + sErrorLogMsg +"] in contents of the log file in the runtimelog saved in path : " + sErrorLogMsg;
+                                return 1;    
+                        //System.out.println("Error line code with message: " + newLineWithError);
+                        }
+                        else {
+                        //System.out.println("Accumulated text also doesnt contain error message: [" + sErrorLogMsg + "[ with status:[" + ErrorLogAccTextFlag+ "]" );    
+                         mgr.deb("Accumulated text also doesnt contain error message: [" + sErrorLogMsg + "[ with status:[" + ErrorLogAccTextFlag+ "]" );
+                              log.stepActual = "Accumulated text from the botton of the log file also doesnt contain error message: [" + sErrorLogMsg + "] with status:[" + ErrorLogAccTextFlag+ "]";
+                                log.stepResult = "Passed";
+                                browser.strErrorInfo = "";       
+                                log.logExecutionResults("VERIFYLOGCONTENT", "Validate Logfile with the Error log code message","To validate the Logfile with the Error log code message","Passed", "Accumulated text from the botton of the log file also doesnt contain error message: [" + sErrorLogMsg + "] with status:[" + ErrorLogAccTextFlag+ "]",10,"","VERIFYLOGCONTENT" );        
+                              return 0; 
+                        }                    
+             }                
+         } 
+         if(ErrorLogCode==false) {
+           System.out.println("Error log reference is not available in the log file: " + sErrorLogRef + " with status:Failed");
+           mgr.deb("Failed to find the error log reference["+ sErrorLogRef + "]in the overall Log file  text above reference text with error message: " + sErrorLogMsg);
+                log.stepActual = "Unable to find the error log reference["+ sErrorLogRef + "]in the overall Log file  text above reference text with error message: " + sErrorLogMsg;
+                  log.stepResult = "Passed";
+                  browser.strErrorInfo = "";       
+                  log.logExecutionResults("VERIFYLOGCONTENT", "Validate Logfile with the Error log code message","To validate the Logfile with the Error log code message","Passed", "Failed to find the error log reference["+ sErrorLogRef + "]in the overall Log file  text above reference text with error message: [" + sErrorLogMsg + "]",10,"","VERIFYLOGCONTENT" );        
+                return 0; 
+         }           
+    }     
+          catch (Exception e) {
+                   if(!browser.isAllowedException(e))            
+                   mgr.logException(e);
+                   browser.strErrorInfo = "Failed to read and validate the contents of the log file in the path [" + Filepath + "] with error message: " + e;
+                   return 1;          
+   
+          } finally {
+        if(br != null) {
+            try {
+                br.close();   
+            } catch(IOException e) {
+                  mgr.logException(e);
+                               browser.strErrorInfo = "Failed to read and validate the contents of the log file in the path with IOexception: " + e;
+                               return 1;    
+            }
+        }
+    }
+          return 0;
+          
+}
+
+
+   /***************************************************************************************************************************************************
+Function Name: 'SaveRuntimeLogFile'
+Description: //To save the log file in the desired path at runtime
+
+Parameters: https://bpmpsalt3.mid.aib.pri/BPMPSS/AppLogs/CEPLogger.log;Filepath                
+Screen name: NA
+Object Name: NA
+Return Value: Returns 0 or 1   
+Eg: //int resultCode=readAndValidateInReverseOrder("C:\\CEP\\information.txt",">0d7cd169-e1c2-463d-af82-56de87b4e543<","Invalid JWT");
+       //int resultCode=readAndValidateInReverseOrder("https://bpmpsalt3.mid.aib.pri/BPMPSS/AppLogs/CEPLogger.log","C:\\CEP\\information.txt"); 
+**************************************************************************************************************************************************/
+   
+   public  int SaveRuntimeLogFile(String parameter) {
+   //public static int readAndValidateInReverseOrder(String path,String ErrorLogRef,String ErrorLogMsg) throws IOException {
+                   
+          URL websitetologcopy;
+          disableSslVerification();
+          String[] splitparameter= parameter.split("#");         
+           
+	       String ErrorLogFile = conf.getParameterValue(splitparameter[0]);       
+	       String SavetoFilepath = conf.getParameterValue(splitparameter[1]); 
+	       mgr.deb("The value of ErrorLogFile is: " + ErrorLogFile);
+	       mgr.deb("The value of SavetoFilepath is: " + SavetoFilepath);
+         
+          try 
+          {
+                 //website = new URL("https://bpmpsalt3.mid.aib.pri/BPMPSS/AppLogs/CEPLogger.log");
+                 websitetologcopy = new URL(ErrorLogFile);
+                 mgr.deb("We are at line no 1507");               
+                              
+            
+                 ReadableByteChannel rbc = Channels.newChannel(websitetologcopy.openStream());
+                 
+                 
+                 mgr.deb("We are at line no 1510");
+		       //FileOutputStream fos = new FileOutputStream("c:\\CEP\\information.txt");
+		       FileOutputStream fos = new FileOutputStream(SavetoFilepath);
+		       mgr.deb("We are at line no 1512");
+		       fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);          
+		       fos.close();        
+		       mgr.deb("We are at line no 1515");
+		       //System.out.println("To enter readfile function"); 
+		       mgr.deb("Saved the runtime log to a file path: [" + ErrorLogFile + "].");
+		       log.stepActual = "Saved the runtime log to a file path: [" + ErrorLogFile + "]." ;
+             log.stepResult = "Passed";
+             browser.strErrorInfo = "";            
+             log.logExecutionResults("SAVELOGFILE", "To save the runtime log to a file path","File has been saved to the path","Passed", "Saved the runtime log to a file path: [" + ErrorLogFile + "].",10,"","SAVELOGFILE" );        
+             return 0;   
+          }
+          catch (Exception e) {
+                  mgr.deb("We are at line no 1525");
+                   if(!browser.isAllowedException(e))            
+                   mgr.logException(e);
+                   browser.strErrorInfo = "Failed to save the log from browser to a file in path " + SavetoFilepath;
+                   return 1;
+          }             
+   }

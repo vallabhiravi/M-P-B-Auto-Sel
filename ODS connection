@@ -1,0 +1,113 @@
+ String[] splitparameter= parameter.split(";");
+	    
+	    String StrTableColVal = conf.getParameterValue(splitparameter[0]);
+	    String HostName = conf.getParameterValue(splitparameter[1]);
+	    String Port = conf.getParameterValue(splitparameter[2]);
+	    String ServiceName = conf.getParameterValue(splitparameter[3]);
+	    String UserName = conf.getParameterValue(splitparameter[4]);
+	    String Password = conf.getParameterValue(splitparameter[5]);
+	    String SQLQuery = conf.getParameterValue(splitparameter[6]);      
+	    String UUID =  conf.getParameterValue(splitparameter[7]);
+	    String StrOperation = conf.getParameterValue(splitparameter[8]);
+	    //Connect to the driver
+	    Connection ODSConn = null;
+	         
+	       Driver myDriver = new oracle.jdbc.driver.OracleDriver();       
+	       mgr.deb("Before Connection");
+	       
+	      /* try {
+	             DriverManager.registerDriver(myDriver);
+	       } catch (SQLException e) {
+	             // TODO Auto-generated catch block
+	             e.printStackTrace();
+	       }*/
+	       
+	       // DB Connection
+	       try {
+	             ODSConn = DriverManager
+	                         .getConnection("jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST="+HostName+")(PORT="+Port+"))(ADDRESS=(PROTOCOL=TCP)(HOST="+HostName+")(PORT="+Port+"))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME="+ServiceName+")))",
+	                                     UserName, Password);
+	              } catch (SQLException e) {
+	             // TODO Auto-generated catch block
+	             e.printStackTrace();
+	       }      
+	       mgr.deb("After Connection");
+       	
+	       try {             
+                   // Create a statement
+                   Statement SQLStatement = ODSConn.createStatement();
+                   
+                   // Execute SQL queries      
+                   String strquery = ""+SQLQuery+" ="+"'"+ UUID +"'" ;
+              
+                  // String strquery = "select * from CEP_EMAIL_INFO where UU_ID="+"'"+ UUID +"'";
+                   mgr.deb(strquery);
+                   
+                   ResultSet rs = SQLStatement.executeQuery(strquery);
+                   
+                   mgr.deb("Query Run Successfully");                 
+	               
+                   //To Validate in table               
+	               mgr.deb(StrTableColVal);
+                   
+                   String[] Splitcontent = StrTableColVal.split("#");
+                   
+                   int loop1 = Splitcontent.length;
+                   
+                   for (int i=0;i<loop1;i++)
+                   {
+                          String[] SplitValue = Splitcontent[i].split(",");      
+                                        
+                                        
+                         String strColName = SplitValue[0];
+                         String strColValue = SplitValue[1];      
+                                               
+	                     while (rs.next()) 
+	                     {
+	                            mgr.deb("Read from DB");
+                               
+		                        String retrievedVal = rs.getString(strColName);
+		                        
+		                        
+		                        if( retrievedVal==null){
+		                          retrievedVal="false";
+		                        }                   
+			                            
+			                    //String strFname = rs.getString(Column2);
+			                    mgr.deb(retrievedVal);
+			                    mgr.deb(strColValue);                    
+			                    			                    
+			                    if(retrievedVal.equalsIgnoreCase(strColValue))
+			                    {			                                                                                                         
+		                              mgr.deb("at line no 2286");
+		                              mgr.deb("Updated in ODS");
+		                              
+		                              log.stepActual = "ODS Updated" ;
+		                              log.stepResult = "Passed";
+		                              browser.strErrorInfo = "";            
+		                              log.logExecutionResults("ODSValidation", "To Validate in ODS","ODS is Updated","Passed", "Updated",10,"","ODSValidation" );
+		                                                            
+		                              break;			                             		                                   
+			                       }
+		                           else 
+		                           {
+		                                   mgr.deb("Columns are not updated in ODS");
+		                                   log.stepActual = "Columns not Updated" ;
+		                                   log.stepResult = "Failed";
+		                                   browser.strErrorInfo = "";            
+		                                   log.logExecutionResults("ODSValidation", "To Validate in ODS","ODS is Not Updated","Failed", "NotUpdated",10,"","ODSValidation" );
+		                                   return 1;                                                                         
+		                           }                              
+	                     }
+                   }                                                       
+	                      
+                   return 0;
+	                           
+	       }
+	       
+	       catch (Exception ex) {
+	             System.out.println("Error: unable to load driver class!" + ex);
+	             System.exit(1);
+	       }      
+	              
+	              return 0;

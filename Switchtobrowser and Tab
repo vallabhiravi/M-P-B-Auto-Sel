@@ -1,0 +1,72 @@
+/***************************************************************************************************************************************************
+    Function Name: 'SwitchtoTab'
+    Description: This function is used to wait until object is visible
+    Parameters: WaitTimeinSeconds[eg: 10]                
+    Screen name: Required
+    Object Name: Required
+    Return Value: Returns 0 or 1    
+ **************************************************************************************************************************************************/
+                public int SwitchtoTab() 
+                {
+                                int resultCode = 1;
+                                log.stepActual =  "Inside Switch to Tab";
+                                //FAILURE
+                     try 
+                     {
+          String parentHandle = webDriver.getWindowHandle(); // get the current window handle
+          mgr.deb("Parent Window Handle" + parentHandle);
+          //Prints the parent window handle
+             for (String winHandle : webDriver.getWindowHandles()) 
+             { //Gets the new window handle
+                 System.out.println(""+winHandle);
+                 mgr.deb("Inside Child Window Handle");
+                 webDriver.switchTo().window(winHandle);        // switch focus of WebDriver to the next found window handle  
+                 log.stepActual =  "Successfully selected the tab";
+             }
+          resultCode = 0;
+          //success
+                     } 
+                     catch(Exception  e) 
+                     {
+                                   browser.strErrorInfo = "Error occurred during WAIT." + " Error:" + e.getMessage();
+                                   mgr.logException(e);
+                                   log.stepActual =  "Error occurred during selection of the tab";
+                     }
+                     return resultCode;
+                }
+/************************************************************************************************************************************************/
+                /***************************************************************************************************************************************************
+    Function Name: 'switchBrowser'
+    Description: This function is used to switch browser
+    Parameters:                 
+    Screen name: NA
+    Object Name: NA
+    Return Value: Returns 0 or 1    
+ **************************************************************************************************************************************************/
+                public int switchBrowser()
+                {              
+                                String elementXpath = parameter;    
+                                browser = mgr.getAutBrowser();             
+                                webDriver = browser.getWebDriver();
+                                try 
+                                {                
+                                                 int winHandleBefore = webDriver.getWindowHandles().size();                   
+                                                 mgr.deb("501" + winHandleBefore);                      
+                                                 for (String winHandle : webDriver.getWindowHandles()) { //Gets the new window handle 
+                                                                  //System.out.println(winHandle);
+                                                                   webDriver.switchTo().window(winHandle);
+                                                  }                                              
+                                                  Thread.sleep(10000);                   
+                                                  log.stepActual = "Wait until control is trasfered to new browser" ;
+                                                  log.stepResult = "Passed";
+                                                  browser.strErrorInfo = "";
+                                                  log.logExecutionResults("SWITCHBROWSER", "Waituntil until control is trasfered to new browser","Control is trasfered to new browser","Passed", "Control is trasfered to new browser succesfully",10,"","SWITCHBROWSER" );
+                                                  return 0;
+                                } 
+                                 catch (Exception e) {
+                                                  if(!browser.isAllowedException(e))            
+                                                  mgr.logException(e);
+                                                  browser.strErrorInfo = "Failed to transfer the control to new browser" + elementXpath;
+                                                  return 1;
+                                }                                       
+                 }

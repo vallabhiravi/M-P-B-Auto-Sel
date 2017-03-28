@@ -1,0 +1,128 @@
+  String elementXpath = xPath;
+	  
+	  		   //String[] splitparameter= parameter.split(";"); 
+	       //String sdateformat = conf.getParameterValue(splitparameter[0]);
+			String sdateformat = parameter;
+	       //String dateVal = conf.getParameterValue(splitparameter[1]);
+	      // String dateVal = webDriver.findElement(By.xpath(elementXpath)).getText();
+	       
+	       boolean strValFlag=true;
+	       
+	       try {
+	    	   mgr.deb("Entered Validate date format function with Xpath:" + elementXpath);
+	    	   if (!webDriver.findElements(By.xpath(elementXpath)).isEmpty()) {
+	    		   
+	    		   
+		    	   Date sdate = null;
+			        
+		    	   
+		    	   mgr.deb("Validatedateformat:- Size of the elements set: " + webDriver.findElements(By.xpath(elementXpath)).size()); 
+		    	   for (int intParaLen = 0; intParaLen < webDriver.findElements(By.xpath(elementXpath)).size(); intParaLen++) { 
+		    		   WebElement dateValObj = webDriver.findElements(By.xpath(elementXpath)).get(intParaLen);
+		    		   //mgr.deb("Validatedateformat:- Date value object from which the date has to be retreived: " + webDriver.findElements(By.xpath(elementXpath)).get(0).getText());
+		    		   //mgr.deb("Validatedateformat:- Date value object from which the date has to be retreived: " + dateValObj);
+		    		   //mgr.deb("Validatedateformat:- Date value object from which the date has to be retreived: " + webDriver.findElements(By.xpath(elementXpath)).get(1).getText());
+		    		   //mgr.deb("Validatedateformat:- Date value object from which the date has to be retreived: " + webDriver.findElements(By.xpath(elementXpath)).get(2).getText());
+		    		   //mgr.deb("Validatedateformat:- Date value object from which the date has to be retreived: " + webDriver.findElements(By.xpath(elementXpath)).get(3).getText());
+		    		  
+		    		   
+		    		   String dateVal=dateValObj.getText();
+		    		   mgr.deb("Validatedateformat:- Date value to be parsed: " + dateVal);
+		    		   DateFormat sdformat = new SimpleDateFormat(sdateformat);
+			            
+			           /* DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+			            DateTime dob = formatter.parseDateTime(dateOfBirth);*/
+			            
+			            
+			            	sdformat.setLenient(false);
+				            sdate = sdformat.parse(dateVal);
+				            int datelen=dateVal.length();
+				            int dateformatlen=sdateformat.length();
+				            if ((dateVal.equals(sdformat.format(sdate))) && (datelen==dateformatlen)) {
+				                sdate = null;		            
+					             log.stepActual = "Date format and value are matching: [" + sdateformat + "].["+ dateVal +"]" ;
+					             log.stepResult = "Passed";
+					             browser.strErrorInfo = ""; 
+					             mgr.deb("Validatedateformat: Date is in expected format with val:" + dateVal);
+					             //log.logExecutionResults("ValidateDateformat", "To verify date is in the format specified","Date should be in expected format","Passed", "Date is in the expected format: [" + sdateformat + "].",10,"","ValidateDateformat" );
+					             //return 0;
+				            }
+				             else {		            	 
+				            	 
+				            	 mgr.deb("Validatedateformat: Date is not in expected format" + sdateformat);
+					            browser.strErrorInfo = "Date ["+ dateVal  +"] is not in expected format[:" + sdateformat+ "]";
+					            strValFlag=false;
+					            //return 1;		            	 
+				            	  
+				             }	             
+				     } 
+			    	 if (strValFlag=false) {
+			    		 
+			    		 
+			    		 mgr.deb("Validatedateformat: Date is not in expected format" + sdateformat);
+			    		 log.stepResult = "Failed";
+			    		 log.stepActual = "Date format is : [" + elementXpath + "]." ;
+			    		 browser.strErrorInfo = "Date is not in the expected format: [" + sdateformat + "].";
+			             return 1;			    		 
+			    		 
+			    	 }
+			    	 else {
+			    		 log.stepActual = "Date format and value are matching: [" + sdateformat + "]";
+			    		 log.stepResult = "Passed";
+			             browser.strErrorInfo = ""; 
+			             mgr.deb("Validatedateformat: Date is in expected format with val:" + sdateformat);
+			    		 return 0;
+			    	 }    		 
+			    	  
+	    	   } 
+	    	   else
+	           {        
+	                   
+	                   log.stepActual = "Object doesnot exists in the web page: [" + elementXpath + "]." ;
+	                   log.stepResult = "Failed";
+	                   browser.strErrorInfo = "";
+	             
+	                   log.logExecutionResults("Validatedateformat", "To verify all the date format of an object","Date format shoule be validated as expected","Failed", "Object doesnot exists in the web page: [" + elementXpath + "]." ,10,"","Validatedateformat" );
+	                   return 1;                             
+	            }
+	    	  // return 0;
+	       }
+	       
+	       
+	       
+	       /*Date sdate = null;
+	        try {
+	            DateFormat sdformat = new SimpleDateFormat(sdateformat);
+	            
+	            DateTimeFormatter formatter = DateTimeFormat.forPattern("dd/MM/yyyy");
+	            DateTime dob = formatter.parseDateTime(dateOfBirth);
+	            
+	            
+	            	sdformat.setLenient(false);
+		            sdate = sdformat.parse(dateVal);
+		            int datelen=dateVal.length();
+		            int dateformatlen=sdateformat.length();
+		            if ((dateVal.equals(sdformat.format(sdate))) && (datelen==dateformatlen)) {
+		                sdate = null;		            
+			             log.stepActual = "Date format and value are matching: [" + sdateformat + "].["+ dateVal +"]" ;
+			             log.stepResult = "Passed";
+			             browser.strErrorInfo = "";            
+			             //log.logExecutionResults("ValidateDateformat", "To verify date is in the format specified","Date should be in expected format","Passed", "Date is in the expected format: [" + sdateformat + "].",10,"","ValidateDateformat" );
+			             return 0;
+		            }
+		             else {		            	 
+		            	 
+		            	 mgr.deb("Validatedateformat: Date is not in expected format" + sdateformat);
+			            browser.strErrorInfo = "Date ["+ dateVal  +"] is not in expected format[:" + sdateformat+ "]";
+			            return 1;		            	 
+		            	  
+		             }	             
+	        }*/
+	        catch (Exception e) {
+	      	  
+	             if(!browser.isAllowedException(e))            
+	             mgr.logException(e);
+	             browser.strErrorInfo = "Date format [" + sdateformat + "] is different  from actual value";
+	             return 1;
+	        }   
+	

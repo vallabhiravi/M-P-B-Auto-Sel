@@ -1,0 +1,46 @@
+  //String elementXpath = xPath; 
+          String[] splitparameter= parameter.split(";");
+          String strFilepath = conf.getParameterValue(splitparameter[0]);
+          String strSheetName = conf.getParameterValue(splitparameter[1]);  
+          String strColmnNo = conf.getParameterValue(splitparameter[2]);  
+          String strRowno= conf.getParameterValue(splitparameter[3]); 
+          String strOutputVariable = splitparameter[4]; 
+          
+          try 
+          {                    
+        
+            FileInputStream inputfile= new FileInputStream(strFilepath);
+            
+             Workbook wb=WorkbookFactory.create(inputfile);
+             mgr.deb("Sheetname: "+ strSheetName);
+            Sheet sh=wb.getSheet(strSheetName);
+            
+
+            Integer intColmnNo = Integer.valueOf(strColmnNo);
+            Integer intRowNo = Integer.valueOf(strRowno);
+            
+            mgr.deb("strColmnNo: "+ strColmnNo);
+            mgr.deb("strRowno: "+ strRowno);
+          Cell strCellValue=sh.getRow(intRowNo).getCell(intColmnNo);
+        
+          mgr.deb("CellValue: "+ strCellValue);
+          
+          String strOutputValue=String.valueOf(strCellValue);
+          conf.addRuntimeData(strOutputVariable, strOutputValue);
+          
+          mgr.deb("OutputValue: "+ strCellValue);
+      
+          log.stepResult = "Passed";
+          log.logExecutionResults("ReadExcel", "To read data from the excel file ","Details from the excel should be extracted as expected","Passed", "Details from the excel are extracted as expected",10,"","ReadExcel" );
+          
+          inputfile.close();
+ 
+          return 0;
+          
+          }             
+          catch (Exception e) {
+	          if(!browser.isAllowedException(e))            
+	          mgr.logException(e);
+	          browser.strErrorInfo = "Failed to read the excel in path:" + strFilepath;
+	          return 1;
+          }

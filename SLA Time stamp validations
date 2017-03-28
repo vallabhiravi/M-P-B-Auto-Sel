@@ -1,0 +1,319 @@
+  /***************************************************************************************************************************************************
+       Function Name: 'SLATimeStamp'
+       Description: This function is used for check time stamp for various chosen task in the Work list of IBM BPM portal
+       Parameters: Task type and Document type together[Task Type:Click to work on the task;Document Type:Will;PreSLATime;NewSLATime;TimeDifference;TimeDifference;strProcessType]                 
+       Screen name: Required
+       Object Name: Required[Eg:  //div[text()='My Tasks']/following::]
+       Return Value: Returns 0 or 1    
+     **************************************************************************************************************************************************/
+      public int SLATimeStamp(String parameter) {
+             
+              mgr.deb("We are at line no 1663");
+              try
+              {
+                     mgr.deb("We are at line no 1666");
+                      if(webDriver == null) 
+                      {
+                            println("Browser instance is null. Application not launched properly");
+                      }
+                  
+                  
+                         if(browser == null) 
+                         {
+                            mgr.deb("Browser instance is null. Application not launched properly");
+                         }
+                                  
+                         if(parameter == null) 
+                         {
+                            browser.strErrorInfo = "Parameters passed are not correct:";
+                         }
+                         
+                         if(strSLADueDate == null) 
+                         {
+                            browser.strErrorInfo = "The value of strSLADueDate is empty " +strSLADueDate;
+                         }
+                  
+                       
+                      
+                         String TaskGeneratedTime;
+                         String TaskGeneratedDate="0";
+                         String SLATimeDifference;
+             
+                         int DaysToBeAdded;
+                         int HoursToBeAdded;
+                         int TaskGeneratedHR;
+                         int TaskGeneratedMIN;
+                            int TotalHoursToBeAdded = 0;
+                            int ActualTimeOfTaskToBeGenerated = 0;
+                         Date date=new Date();
+                             Calendar calendar = Calendar.getInstance();
+                             date=calendar.getTime(); 
+                             SimpleDateFormat TaskDate = new SimpleDateFormat("dd MMMM yyyy");;
+                             SimpleDateFormat TaskTime = new SimpleDateFormat("HH:mm");
+                         
+                         SLATimeDifference = conf.getParameterValue(parameter); 
+                         String sampleVar="NA";
+                         mgr.deb("The result of SLATimeDifference is " + SLATimeDifference);
+                         if(SLATimeDifference.equals(sampleVar))
+                         {
+                            mgr.deb("if condition has passed and We are at line no 1829");
+                            log.stepActual = "The SLA for this process have not been defined";
+                       log.stepResult = "Passed";
+                       browser.strErrorInfo = "";                                                                                           
+                       log.logExecutionResults("SLATimeStamp", " Checked the time difference","The time difference for the task should be checked","Passed", "The SLA for this process have not been defined",10,"","SLATimeStamp" );
+                       return 0;                       
+                         }
+                         else
+                         {
+                             mgr.deb("Above if condition has failed " + SLATimeDifference );
+                         DaysToBeAdded = (Integer.valueOf(SLATimeDifference)) / 8;
+                         HoursToBeAdded = (Integer.valueOf(SLATimeDifference)) % 8;
+                         mgr.deb("Value of DaysToBeAdded at line no 1704: "+ DaysToBeAdded);
+                         mgr.deb("Value of HoursToBeAdded at line no 1705: "+ HoursToBeAdded);
+                         
+                    
+                             
+                             mgr.deb("Value of TaskDate at line no 1713: "+ TaskDate);
+                             mgr.deb("Value of TaskTime at line no 1714: "+ TaskTime);
+                             
+                              TaskGeneratedTime = TaskTime.format(date);
+                              String[] TaskTimeHM = TaskGeneratedTime.split(":");
+                              TaskGeneratedHR = (Integer.valueOf(TaskTimeHM[0]));
+                              TaskGeneratedMIN = (Integer.valueOf(TaskTimeHM[1]));
+                             
+                              
+                              mgr.deb("Value of TaskGeneratedHR at line no 1722: "+ TaskGeneratedHR);
+                              mgr.deb("Value of TaskGeneratedMIN at line no 1723: "+ TaskGeneratedMIN);
+                              mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1724: "+ ActualTimeOfTaskToBeGenerated);
+                              
+                                    for(int i=1;i<=DaysToBeAdded;)
+                                        {
+                                       calendar.add(Calendar.DAY_OF_MONTH, 1);
+                           
+                                       if((calendar.get(Calendar.DAY_OF_WEEK)<7) && (calendar.get(Calendar.DAY_OF_WEEK)>1) )
+                                       {
+                                             mgr.deb("Value of i: "+ i);
+                                           i++;
+                                         date=calendar.getTime();                               
+                                        TaskGeneratedDate = TaskDate.format(date);
+                                        mgr.deb("Value of TaskGeneratedDate at line no 1739: "+ TaskGeneratedDate);
+                                        
+                                      }
+                                        }
+                                    
+                                    
+                                   
+                                              TotalHoursToBeAdded = HoursToBeAdded+TaskGeneratedHR;
+                                       mgr.deb("Value of TotalHoursToBeAdded at line no 1745: "+ TotalHoursToBeAdded);
+                                              
+                                                           if (TaskGeneratedHR>17) 
+                                                           {
+                                                                  
+                                                                                              if ((DaysToBeAdded > 0) && (HoursToBeAdded == 0)) 
+                                                                                              {
+                                                                                                     mgr.deb("It has gone inside the first condition where task is generated after 17 PM and no of hRS to be added is 8");
+                                                                                                     HoursToBeAdded = 8;
+                                                                                                     ActualTimeOfTaskToBeGenerated = 9+HoursToBeAdded;
+                                                                                                     mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1773 "+ ActualTimeOfTaskToBeGenerated);
+                                                                                                     TaskGeneratedMIN=0;
+                                                                                              
+                                                                                                     
+                                                                                                    }
+                                                                                              else
+                                                                                              {
+                                                                                                     mgr.deb("It has gone inside the first condition where task is generated after 17 PM and no of hRS to be added is less than 8");
+                                                                                                     calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                                                     date=calendar.getTime();                           
+                                                                                                        TaskGeneratedDate = TaskDate.format(date);
+                                                                                                        ActualTimeOfTaskToBeGenerated = 9+HoursToBeAdded;
+                                                                                                        TaskGeneratedMIN=0;
+                                                                                                        mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1783 "+ ActualTimeOfTaskToBeGenerated);
+                                                                                                        mgr.deb("Value of TaskGeneratedDate at line no 1784 "+ TaskGeneratedDate);
+                                                                                                                                   
+                                                                                              }
+                                                                                                     mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1753: "+ ActualTimeOfTaskToBeGenerated);
+                                                                                                     mgr.deb("Value of day in the week is -  "+ calendar.get(Calendar.DAY_OF_WEEK));
+                                                                                                     
+                                                                                                     
+                                                                                                     
+                                                                                             if (calendar.get(Calendar.DAY_OF_WEEK)==7) 
+                                                                                             {
+                                                                                                    mgr.deb("It has gone inside the first condition and date was equal to Saturday");
+                                                                                                     calendar.add(Calendar.DAY_OF_MONTH, 2);
+                                                                                                     date=calendar.getTime();                           
+                                                                                                        TaskGeneratedDate = TaskDate.format(date);
+                                                                                                        mgr.deb("Value of TaskGeneratedDate at line no 1764: "+ TaskGeneratedDate);
+                                                                                              }
+                                                                                              if (calendar.get(Calendar.DAY_OF_WEEK)==1) 
+                                                                                              {
+                                                                                                     mgr.deb("It has gone inside the first condition and date was equal to Sunday");
+                                                                                                     calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                                                     date=calendar.getTime();                           
+                                                                                                        TaskGeneratedDate = TaskDate.format(date);
+                                                                                                        mgr.deb("Value of TaskGeneratedDate at line no 1766: "+ TaskGeneratedDate);
+                                                                                              }
+                                                                  
+                                                           }
+                                                           
+                                                           
+                                                           
+                                                           else if (TaskGeneratedHR<17 && TotalHoursToBeAdded>17) 
+                                                           {
+                                                                  mgr.deb("It has gone inside the Second condition where task is generated before 17 PM and no of hRS to be added is greater than 17");
+                                                                  int TimeToBeAddedNextDay = TotalHoursToBeAdded - 17;
+                                                                         calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                  date=calendar.getTime();   
+                                                                  TaskGeneratedDate = TaskDate.format(date);
+                                                                  
+                                                                  mgr.deb("Value of TaskGeneratedDate at line no 1766: "+ TaskGeneratedDate);
+                                                                  ActualTimeOfTaskToBeGenerated = 9+TimeToBeAddedNextDay;
+                                                                  
+                                                                  mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1780: "+ ActualTimeOfTaskToBeGenerated);
+                                                           
+                                                                                                     if (calendar.get(Calendar.DAY_OF_WEEK)==7) 
+                                                                                                     {
+                                                                                                            mgr.deb("It has gone inside the first condition and date was equal to Saturday");
+                                                                                                            calendar.add(Calendar.DAY_OF_MONTH, 2);
+                                                                                                            date=calendar.getTime();                           
+                                                                                                               TaskGeneratedDate = TaskDate.format(date);
+                                                                                                               mgr.deb("Value of TaskGeneratedDate at line no 1787: "+ TaskGeneratedDate);
+                                                                                                     }
+                                                                                                     
+                                                                                                    if (calendar.get(Calendar.DAY_OF_WEEK)==1) 
+                                                                                                     {
+                                                                                                            mgr.deb("It has gone inside the first condition and date was equal to Sunday");
+                                                                                                            calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                                                            date=calendar.getTime();                           
+                                                                                                               TaskGeneratedDate = TaskDate.format(date);
+                                                                                                               mgr.deb("Value of TaskGeneratedDate at line no 1795: "+ TaskGeneratedDate);
+                                                                                                     }
+                                                           }
+                                                            else
+                                                           {
+                                                                  mgr.deb("It has gone inside the Third condition where task is generated before 17 PM and no of hRS to be added is Less than 17");
+                                                                                              if(TaskGeneratedHR<9)  
+                                                                                              {                                                                    
+                                                                                                     mgr.deb("It has gone inside the Third/First condition where TaskGeneratedHR is Less than 9 AM i.e. execution is done early morning ");
+                                                                                                                                       if((DaysToBeAdded > 0) && (HoursToBeAdded == 0)) 
+                                                                                                                                       {      
+                                                                                                                                              mgr.deb("It has gone inside the Third/First condition where TaskGeneratedHR is Less than 9 AM i.e. execution is done early morning and HRS to be added is 8 ");
+                                                                                                                                              
+                                                                                                                                              calendar.add(Calendar.DAY_OF_MONTH, -1);
+                                                                                                                                                 date=calendar.getTime();                           
+                                                                                                                                             TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                             mgr.deb("Value of TaskGeneratedDate at line no 1: "+ TaskGeneratedDate);
+                                                                                                                                              HoursToBeAdded = 8;
+                                                                                                                                              ActualTimeOfTaskToBeGenerated = 9+HoursToBeAdded;
+                                                                                                                                              TaskGeneratedMIN=0;
+                                                                                                                                              
+                                                                                                                                                                                       if (calendar.get(Calendar.DAY_OF_WEEK)==7) 
+                                                                                                                                                                                      {
+                                                                                                                                                                                              calendar.add(Calendar.DAY_OF_MONTH, 2);
+                                                                                                                                                                                              date=calendar.getTime();                           
+                                                                                                                                                                                                 TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                                                                                 mgr.deb("Value of TaskGeneratedDate at line no 1764: "+ TaskGeneratedDate);
+                                                                                                                                                                                       }
+                                                                                                                                                                                       if (calendar.get(Calendar.DAY_OF_WEEK)==1) 
+                                                                                                                                                                                       {
+                                                                                                                                                                                              calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                                                                                                                                              date=calendar.getTime();                           
+                                                                                                                                                                                                 TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                                                                                 mgr.deb("Value of TaskGeneratedDate at line no 1766: "+ TaskGeneratedDate);
+                                                                                                                                                                                       }
+                                                                                                                                       }
+                                                                                                                                       else
+                                                                                                                                       {
+                                                                                                                                              mgr.deb("It has gone inside the Third/First condition where TaskGeneratedHR is Less than 9 AM i.e. execution is done early morning and HRS to be added not equal to 8");
+                                                                                                                                              calendar.add(Calendar.DAY_OF_MONTH, -1);
+                                                                                                                                              date=calendar.getTime();                           
+                                                                                                                                             TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                              ActualTimeOfTaskToBeGenerated = 9+HoursToBeAdded;
+                                                                                                                                              TaskGeneratedMIN=0;
+                                                                                                                                              
+                                                                                                                                                                  if (calendar.get(Calendar.DAY_OF_WEEK)==7) 
+                                                                                                                                                                  {
+                                                                                                                                                                         calendar.add(Calendar.DAY_OF_MONTH, 2);
+                                                                                                                                                                        date=calendar.getTime();                           
+                                                                                                                                                                         TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                                                         mgr.deb("Value of TaskGeneratedDate at line no 1764: "+ TaskGeneratedDate);
+                                                                                                                                                                  }
+                                                                                                                                                                  if (calendar.get(Calendar.DAY_OF_WEEK)==1) 
+                                                                                                                                                                  {
+                                                                                                                                                                         calendar.add(Calendar.DAY_OF_MONTH, 1);
+                                                                                                                                                                        date=calendar.getTime();                           
+                                                                                                                                                                         TaskGeneratedDate = TaskDate.format(date);
+                                                                                                                                                                         mgr.deb("Value of TaskGeneratedDate at line no 1766: "+ TaskGeneratedDate);
+                                                                                                                                                                  }
+                                                                                                                                       }
+                                                                                                                                
+                                                                                              }
+                                                                                              else
+                                                                                              {
+                                                                                                     mgr.deb("It has gone inside the Third/Second condition where TaskGeneratedHR is Less than 17 PM and HRS to be added is within 17 PM");
+                                                                                                     date=calendar.getTime();                           
+                                                                                                        TaskGeneratedDate = TaskDate.format(date);
+                                                                                                     ActualTimeOfTaskToBeGenerated = TaskGeneratedHR+HoursToBeAdded;
+                                                                                                     mgr.deb("Value of ActualTimeOfTaskToBeGenerated at line no 1801: "+ ActualTimeOfTaskToBeGenerated);
+                                                                                              }
+                                                                  
+                                                                  }
+                                   
+                                             
+                                
+                                    
+                                    
+                         String AppSlaTargetDate = strSLADueDate.substring(0,strSLADueDate.length() - 6); // Retrieved date 
+                         String AppSlaTargetTime = strSLADueDate.substring(strSLADueDate.length() - 5);   // Retrieved Time 
+                         
+                         String[] splitAppSlaTargetTime= AppSlaTargetTime.split(":");
+                         int intNewHR = Integer.parseInt(splitAppSlaTargetTime[0]);
+                      int intNewMin = Integer.parseInt(splitAppSlaTargetTime[1]);
+                      mgr.deb("Value of strSLADueDate at line no 1815: "+ strSLADueDate);
+                      mgr.deb("Value of intNewHR at line no 1816: "+ intNewHR);
+                      mgr.deb("Value of intNewMin at line no 1818: "+ intNewMin);      
+                      
+                         int ActualTargetTime = (intNewHR*3600) + (intNewMin*60);  
+                         
+                         int ExpectedTargetTime = (ActualTimeOfTaskToBeGenerated*3600) + (TaskGeneratedMIN*60);
+                         mgr.deb("Value of ActualTargetTime at line no 1876: "+ ActualTargetTime);
+                         
+                         mgr.deb("Value of ExpectedTargetTime at line no 1877: "+ ExpectedTargetTime);
+                         
+                      //String TargetDate =TaskDate.format(TaskGeneratedDate);
+                         //String TargetDate =TaskGeneratedDate;
+                      //mgr.deb("Value of TargetDate at line no 1822: "+ TargetDate);
+                      int TimeDiffernce = ExpectedTargetTime - ActualTargetTime;
+                      mgr.deb("Value of TimeDiffernce at line no 1824: "+ TimeDiffernce);
+                                 
+                          if ((TimeDiffernce < 120) && (TaskGeneratedDate.equals(AppSlaTargetDate)))
+                                  {    
+                            
+                            mgr.deb("if condition has passed and We are at line no 1829");
+                                          log.stepActual = "The time difference is equal to the expected time:- " + SLATimeDifference + "hrs";
+                                         log.stepResult = "Passed";
+                                         browser.strErrorInfo = "";                                                                                           
+                                         log.logExecutionResults("SLATimeStamp", " Checked the time difference","The time difference for the task should be checked and is " + SLATimeDifference + " HRS","Passed", "The time difference for the task is checked Successfully",10,"","SLATimeStamp" );
+                                         return 0;
+                       }
+                     else
+                     {
+                            mgr.deb("if condition has FAILED and We are at line no 1838");
+                            mgr.deb("Value of TimeDifference at 1262 is -  " + SLATimeDifference);
+                            browser.strErrorInfo = "The time difference mismatches the expected time:- " + SLATimeDifference + "And the date " + AppSlaTargetDate;
+                            return 1;  
+                     }             
+                               
+                         }   
+              }
+                    
+              catch (Exception e)
+              {
+                  mgr.deb("SelectMytask function has failed because of exception and we are at line no 1849");
+                  if(!browser.isAllowedException(e))
+                    mgr.logException(e);
+                    return 1;
+              }
+               
+
+           }
+
